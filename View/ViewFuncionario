@@ -1,0 +1,319 @@
+package view;
+
+import excecao.Excecao;
+import java.text.ParseException;
+import javax.swing.JOptionPane;
+import modelo.Funcionario;
+import modelo.Endereco;
+import persistencia.FuncionarioDAO;
+
+public class ViewFuncionario {
+
+    public static void menu(FuncionarioDAO listaFuncionario) throws Excecao {
+        int opc = -1;
+        String aux = "";
+
+        do {
+            aux = JOptionPane.showInputDialog(
+                    "++++++++++++++++++++\n"
+                    + "+          MENU FUNCIONARIO\n"
+                    + "++++++++++++++++++++\n"
+                    + "+ 1 - Cadastrar\n"
+                    + "+ 2 - Editar\n"
+                    + "+ 3 - Remover\n"
+                    + "+ 4 - Listar\n"
+                    + "++++++++++++++++++++\n"
+                    + "+ 0 - Sair\n"
+                    + "++++++++++++++++++++");
+
+            if (aux == null) {
+                opc = 0;
+                continue;
+            }
+
+            try {
+                opc = Integer.valueOf(aux);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage() + "\nValor invalido. Tente Novamente.");
+                continue;
+            }
+
+            switch (opc) {
+                case 1:
+                    cadastrar(listaFuncionario);
+                    break;
+                case 2:
+                    editar(listaFuncionario);
+                    break;
+                case 3:
+                    remover(listaFuncionario);
+                    break;
+                case 4:
+                    listar(listaFuncionario);
+                    break;
+                case 0:
+                    break;
+                default:
+                    JOptionPane.showMessageDialog(null, "Opcao Invalida!");
+            }
+        } while (opc != 0);
+    }
+
+    private static void cadastrar(FuncionarioDAO listaFuncionario) {
+        Funcionario f = new Funcionario();
+        Endereco e = new Endereco();
+
+        
+        try {
+            f.setId(listaFuncionario.getProximoId());
+            solicitarDados(f, e);
+            listaFuncionario.adicionar(f);
+            JOptionPane.showMessageDialog(null, "Funcionario cadastrado com sucesso");
+        } catch (Excecao ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+        } catch (NullPointerException ex) {
+            JOptionPane.showMessageDialog(null, "Cadastro Cancelado");
+        }
+    }
+
+    private static void editar(FuncionarioDAO listaFuncionario) throws Excecao {
+        Funcionario f = new Funcionario();
+        Endereco e = new Endereco();
+        boolean flag;
+        String s, nomeAux;
+
+        do {
+            flag = false;
+            try {
+                s = JOptionPane.showInputDialog("Digite o CPF: ");
+                f.setCpf(s);
+                flag = true;
+            } catch (Excecao ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            } catch (NullPointerException ex) {
+                JOptionPane.showMessageDialog(null, "Edicao cancelada");
+                return;
+            }
+        } while (!flag);
+
+        for (Funcionario ff : listaFuncionario.getLista()) {
+            if (f.equals(ff)) {
+                try {
+                    nomeAux = ff.getNome();
+                    f.setId(ff.getId());
+                    f.setCpf(ff.getCpf());
+                    f.setDataNascimento(ff.getDataNascimento());
+                    solicitarDadosEdicao(f, e, nomeAux);
+                    listaFuncionario.excluir(ff);
+                    listaFuncionario.adicionar(f);
+                    JOptionPane.showMessageDialog(null, "Funcionario '" + nomeAux + "' editado com sucesso");
+                    return;
+                } catch (Excecao ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage());
+                } catch (ParseException ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage());
+                } catch (NullPointerException ex) {
+                    JOptionPane.showMessageDialog(null, "Edicao Cancelada");
+                    return;
+                }
+            }
+        }
+
+        JOptionPane.showMessageDialog(null, "Funcionario Nao Encontrado");
+    }
+    
+    private static void remover(FuncionarioDAO listaFuncionario) {
+        Funcionario f = new Funcionario();
+        String nomeAux = "";
+        boolean flag = false;
+
+        do {
+            flag = false;
+            try {
+                f.setCpf(JOptionPane.showInputDialog("Digite um CPF: "));
+                flag = true;
+            } catch (Excecao ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            } catch (NullPointerException ex) {
+                JOptionPane.showMessageDialog(null, "Remocao Cancelada");
+                return;
+            }
+        } while (!flag);
+
+        for (Funcionario ff : listaFuncionario.getLista()) {
+            if (f.equals(ff)) {
+                nomeAux = ff.getNome();
+                break;
+            }
+        }
+
+        try {
+            listaFuncionario.excluir(f);
+            JOptionPane.showMessageDialog(null, "Funcionario '" + nomeAux + "' excluido com sucesso");
+        } catch (Excecao ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+        }
+    }
+
+    private static void listar(FuncionarioDAO listaFuncionario) {
+        int contador = 0;
+        for (Funcionario ff : listaFuncionario.getLista()) {
+            JOptionPane.showMessageDialog(null, ff);
+            contador++;
+        }
+        if (contador == 0) {
+            JOptionPane.showMessageDialog(null, "Nenhum Funcionario Cadastrado");
+        }
+    }
+    
+    private static void solicitarDados(Funcionario f, Endereco e) {
+        try {
+            f.setStatus('A');
+            solicitarDadoFuncionario(f, "Cpf (Apenas Numeros)");         
+            solicitarDadoFuncionario(f, "Nome");
+            solicitarDadoEndereco(e, "Rua");
+            solicitarDadoEndereco(e, "Numero");
+            solicitarDadoEndereco(e, "Bairro");
+            solicitarDadoEndereco(e, "Cidade");
+            solicitarDadoEndereco(e, "Estado");
+            solicitarDadoFuncionario(f, "Telefone (Apenas Numeros)");
+            solicitarDadoFuncionario(f, "Email");
+            solicitarDadoFuncionario(f, "Data de Nascimento (DD/MM/AAAA)");
+            solicitarDadoFuncionario(f, "Cargo");
+            solicitarDadoFuncionario(f, "Salario");
+
+            f.setEndereco(e);
+        } catch (NullPointerException ex) {
+            throw ex;
+        }
+    }
+
+    private static void solicitarDadosEdicao(Funcionario f, Endereco e, String nomeAux) {
+        try {
+            boolean flag;
+            String aux;
+            int opc;
+
+            do {
+                flag = false;
+                aux = JOptionPane.showInputDialog("O funcionario '" + nomeAux + "' encontra-se ativo?");
+                if (aux.equals("Sim") || aux.equals("sim")) {
+                    f.setStatus('A');
+                    flag = true;
+                } else {
+                    if (aux.equals("Nao") || aux.equals("nao") || aux.equals("Nao") || aux.equals("nao")) {
+                        f.setStatus('I');
+                        flag = true;
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Responda com 'sim' ou 'nao'.");
+                    }
+                }
+            } while (!flag);
+
+            solicitarDadoFuncionario(f, "Nome");
+            solicitarDadoEndereco(e, "Rua");
+            solicitarDadoEndereco(e, "Numero");
+            solicitarDadoEndereco(e, "Bairro");
+            solicitarDadoEndereco(e, "Cidade");
+            solicitarDadoEndereco(e, "Estado");
+            solicitarDadoFuncionario(f, "Telefone (Apenas Numeros)");
+            solicitarDadoFuncionario(f, "Email");
+            solicitarDadoFuncionario(f, "Cargo");
+            solicitarDadoFuncionario(f, "Salario");
+            f.setEndereco(e);
+
+        } catch (NullPointerException ex) {
+            throw ex;
+        }
+    }
+
+    private static void solicitarDadoFuncionario(Funcionario f, String dado) {
+        boolean flag;
+        String s;
+
+        do {
+            flag = false;
+            s = JOptionPane.showInputDialog(dado + ":");
+            try {
+                if (dado.equals("Cpf (Apenas Numeros)")) {
+                    f.setCpf(s);
+                    flag = true;
+
+                } else {
+                    if (dado.equals("Nome")) {
+                        f.setNome(s);
+                        flag = true;
+                    } else {
+                        if (dado.equals("Telefone (Apenas Numeros)")) {
+                            f.setTelefone(s);
+                            flag = true;
+                        } else {
+                            if (dado.equals("Email")) {
+                                f.setEmail(s);
+                                flag = true;
+                            } else {
+                                if (dado.equals("Data de Nascimento (DD/MM/AAAA)")) {
+                                    f.setDataNascimento(s);
+                                    flag = true;
+                                } else {
+                                    if (dado.equals("Cargo")) {
+                                        f.setCargo(s);
+                                        flag = true;
+                                    } else {
+                                        if (dado.equals("Salario")) {
+                                            f.setSalario(Float.valueOf(s));
+                                            flag = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Excecao ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            } catch (ParseException ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "Salario invalido");
+            } catch (NullPointerException ex) {
+                throw ex;
+            }
+        } while (!flag);
+    }
+
+    private static void solicitarDadoEndereco(Endereco e, String dado) {
+        boolean flag;
+        String s;
+        do {
+            flag = false;
+            s = JOptionPane.showInputDialog(dado + ":");
+            try {
+                if (dado.equals("Rua")) {
+                    e.setRua(s);
+                    flag = true;
+                }
+                if (dado.equals("Numero")) {
+                    e.setNumero(s);
+                    flag = true;
+                }
+                if (dado.equals("Bairro")) {
+                    e.setBairro(s);
+                    flag = true;
+                }
+                if (dado.equals("Cidade")) {
+                    e.setCidade(s);
+                    flag = true;
+                }
+                if (dado.equals("Estado")) {
+                    e.setEstado(s);
+                    flag = true;
+                }
+            } catch (Excecao ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            } catch (NullPointerException ex) {
+                throw ex;
+            }
+        } while (!flag);
+    }
+}
