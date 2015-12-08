@@ -1,0 +1,16 @@
+package excecao;
+
+public class Excecao extends Exception {
+
+    public Excecao() {
+        super();
+    }
+
+    public Excecao(String message) {
+        super(message);
+    }
+
+    public Excecao(Throwable cause) {
+        super(cause);
+    }
+}
