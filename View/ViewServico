@@ -1,0 +1,179 @@
+package view;
+
+import excecao.Excecao;
+import javax.swing.JOptionPane;
+import modelo.Servico;
+import persistencia.ServicoDAO;
+
+public class ViewServico {
+
+    public static void menu(ServicoDAO listaServico) throws Excecao {
+        int opc = -1;
+        String aux = "";
+
+        do {
+            aux = JOptionPane.showInputDialog(
+                    "++++++++++++++++++++\n"
+                    + "+ MENU SERVICO\n"
+                    + "++++++++++++++++++++\n"
+                    + "+ 1 - Cadastrar\n"
+                    + "+ 2 - Editar\n"
+                    + "+ 3 - Remover\n"
+                    + "+ 4 - Listar\n"
+                    + "++++++++++++++++++++\n"
+                    + "+ 0 - Sair\n"
+                    + "++++++++++++++++++++");
+
+            if (aux == null) {
+                opc = 0;
+                continue;
+            }
+            try {
+                opc = Integer.valueOf(aux);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage() + "\nValor invalido. Tente Novamente.");
+                continue;
+            }
+
+            switch (opc) {
+                case 1:
+                    cadastrar(listaServico);
+                    break;
+                case 2:
+                    editar(listaServico);
+                    break;
+                case 3:
+                    remover(listaServico);
+                    break;
+                case 4:
+                    listar(listaServico);
+                    break;
+                case 0:
+                    break;
+                default:
+                    System.out.println("Opcao Invalida");
+            }
+        } while (opc != 0);
+    }
+
+    private static void cadastrar(ServicoDAO listaServico) {
+        Servico s = new Servico();
+        String str;
+        boolean flag;
+
+        s.setId(listaServico.getProximoId());
+        s.setStatus('A');
+
+        do {
+            flag = false;
+            try {
+                str = JOptionPane.showInputDialog("Digite o Nome:");
+                s.setNome(str);
+                flag = true;
+            } catch (Excecao ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            }
+        } while (!flag);
+
+        try {
+            listaServico.adicionar(s);
+            JOptionPane.showMessageDialog(null, "Servico cadastrado com sucesso");
+        } catch (Excecao ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+        }
+    }
+
+    private static void editar(ServicoDAO listaServico) throws Excecao {
+        Servico s = new Servico();
+        String str, nomeAux;
+        Integer idAux = 0;
+        boolean flag;
+
+        do {
+            flag = false;
+            try {
+                str = JOptionPane.showInputDialog("Digite o codigo do servico: ");
+                idAux = Integer.valueOf(str);
+                s.setId(Integer.valueOf(str));
+                flag = true;
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "Edicao cancelada");
+                return;
+            }
+        } while (!flag);
+
+        for (Servico ss : listaServico.getLista()) {
+            if (s.equals(ss)) {
+                try {
+                    s.setId(idAux);
+                    s.setStatus('A');
+
+                    nomeAux = ss.getNome();
+                    do {
+                        flag = false;
+                        str = JOptionPane.showInputDialog("O servico '" + nomeAux + "' continua sendo disponibilizado?");
+                        if (str.equals("Sim") || str.equals("sim")) {
+                            s.setStatus('A');
+                            flag = true;
+                        } else {
+                            if (str.equals("Nao") || str.equals("nao") || str.equals("Nao") || str.equals("nao")) {
+                                s.setStatus('I');
+                                flag = true;
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Responda com 'sim' ou 'nao'.");
+                            }
+                        }
+                    } while (!flag);
+
+                    do {
+                        flag = false;
+                        try {
+                            str = JOptionPane.showInputDialog("Digite o Nome:");
+                            s.setNome(str);
+                            flag = true;
+                        } catch (Excecao ex) {
+                            JOptionPane.showMessageDialog(null, ex.getMessage());
+                        }
+                    } while (!flag);
+
+                    listaServico.excluir(ss);
+                    listaServico.adicionar(s);
+                    JOptionPane.showMessageDialog(null, "Servico editado com sucesso");
+                    return;
+
+                } catch (Excecao ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage());
+                } catch (NullPointerException ex) {
+                    JOptionPane.showMessageDialog(null, "Edicao Cancelada");
+                    return;
+                }
+            }
+        }
+        JOptionPane.showMessageDialog(null, "Servico nao encontrado.");
+    }
+
+    private static void remover(ServicoDAO listaServico) {
+        Servico s = new Servico();
+
+        try {
+            s.setId(Integer.valueOf(JOptionPane.showInputDialog("Digite um ID: ")));
+            listaServico.excluir(s);
+            JOptionPane.showMessageDialog(null, "Servico excluido com sucesso");
+        } catch (Excecao ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "Remocao cancelada");
+        }
+    }
+
+    private static void listar(ServicoDAO listaServico) {
+        int contador = 0;
+        for (Servico ss : listaServico.getLista()) {
+            JOptionPane.showMessageDialog(null, ss);
+            contador++;
+        }
+        if (contador == 0) {
+            JOptionPane.showMessageDialog(null, "Nenhum Servico Cadastrado");
+        }
+    }
+}
