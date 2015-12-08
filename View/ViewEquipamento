@@ -1,0 +1,218 @@
+package view;
+
+import excecao.Excecao;
+import javax.swing.JOptionPane;
+import modelo.Equipamento;
+import persistencia.EquipamentoDAO;
+
+public class ViewEquipamento {
+
+    public static void menu(EquipamentoDAO listaEquipamento) throws Excecao {
+
+        int opc = -1;
+        String aux = "";
+
+        do {
+            aux = JOptionPane.showInputDialog(
+                    "++++++++++++++++++++\n"
+                    + "+ MENU EQUIPAMENTO\n"
+                    + "++++++++++++++++++++\n"
+                    + "+ 1 - Cadastrar\n"
+                    + "+ 2 - Editar\n"
+                    + "+ 3 - Remover\n"
+                    + "+ 4 - Listar\n"
+                    + "++++++++++++++++++++\n"
+                    + "+ 0 - Sair\n"
+                    + "++++++++++++++++++++");
+
+            if (aux == null) {
+                opc = 0;
+                continue;
+            }
+
+            try {
+                opc = Integer.valueOf(aux);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage() + "\nValor invalido. Tente Novamente.");
+                continue;
+            }
+
+            switch (opc) {
+                case 1:
+                    cadastrar(listaEquipamento);
+                    break;
+                case 2:
+                    editar(listaEquipamento);
+                    break;
+                case 3:
+                    remover(listaEquipamento);
+                    break;
+                case 4:
+                    listar(listaEquipamento);
+                    break;
+                case 0:
+                    break;
+                default:
+                    JOptionPane.showMessageDialog(null, "Opcaoo Invalida");
+            }
+        } while (opc != 0);
+    }
+
+    private static void cadastrar(EquipamentoDAO listaEquipamento) {
+        String str;
+        boolean flag;
+        Equipamento e = new Equipamento();
+
+        e.setId(listaEquipamento.getProximoId());
+        e.setStatus('A');
+
+        do {
+            flag = false;
+            try {
+                str = JOptionPane.showInputDialog("Digite o nome do equipamento:");
+                e.setNome(str);
+                flag = true;
+            } catch (Excecao ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            } catch (NullPointerException ex) {
+                JOptionPane.showMessageDialog(null, "Cadastro cancelado");
+                return;
+            }
+        } while (!flag);
+
+        do {
+            flag = false;
+            try {
+                str = JOptionPane.showInputDialog("Digite uma observacao sobre o equipamento:");
+                e.setObservacao(str);
+                flag = true;
+            } catch (Excecao ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage());
+            } catch (NullPointerException ex) {
+                JOptionPane.showMessageDialog(null, "Cadastro cancelado");
+                return;
+            }
+        } while (!flag);
+
+        try {
+            listaEquipamento.adicionar(e);
+            JOptionPane.showMessageDialog(null, "Equipamento cadastrado com sucesso");
+        } catch (Excecao ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+        }
+    }
+
+    private static void editar(EquipamentoDAO listaEquipamento) throws Excecao {
+        String str, nomeAux;
+        boolean flag;
+        Equipamento e = new Equipamento();
+
+        do {
+            flag = false;
+            str = JOptionPane.showInputDialog("Digite o codigo do equipamento: ");
+            try {
+                e.setId(Integer.valueOf(str));
+                flag = true;
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "Edicao cancelada");
+                return;
+            }
+        } while (!flag);
+
+        for (Equipamento ee : listaEquipamento.getLista()) {
+            if (e.equals(ee)) {
+                try {
+                    e.setId(ee.getId());
+                    e.setStatus('A');
+
+                    nomeAux = ee.getNome();
+                    do {
+                        flag = false;
+                        str = JOptionPane.showInputDialog("O equipamento '" + nomeAux + "' encontra-se disponivel?");
+                        if (str.equals("Sim") || str.equals("sim")) {
+                            e.setStatus('A');
+                            flag = true;
+                        } else {
+                            if (str.equals("Nao") || str.equals("nao") || str.equals("Nao") || str.equals("nao")) {
+                                e.setStatus('I');
+                                flag = true;
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Responda com 'sim' ou 'nao'.");
+                            }
+                        }
+                    } while (!flag);
+
+                    do {
+                        flag = false;
+                        try {
+                            str = JOptionPane.showInputDialog("Digite o nome do equipamento:");
+                            e.setNome(str);
+                            flag = true;
+                        } catch (Excecao ex) {
+                            JOptionPane.showMessageDialog(null, ex.getMessage());
+                        }
+                    } while (!flag);
+
+                    do {
+                        flag = false;
+                        try {
+                            str = JOptionPane.showInputDialog("Digite uma observacao sobre o equipamento:");
+                            e.setObservacao(str);
+                            flag = true;
+                        } catch (Excecao ex) {
+                            JOptionPane.showMessageDialog(null, ex.getMessage());
+                        }
+                    } while (!flag);
+
+                    listaEquipamento.excluir(ee);
+                    listaEquipamento.adicionar(e);
+                    JOptionPane.showMessageDialog(null, "Equipamento editado com sucesso.");
+                    return;
+
+                } catch (Excecao ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage());
+                } catch (NullPointerException ex) {
+                    JOptionPane.showMessageDialog(null, "Edicao Cancelada");
+                    return;
+                }
+            }
+        }
+        JOptionPane.showMessageDialog(null, "Equipamento nao encontrado.");
+    }
+
+    private static void remover(EquipamentoDAO listaEquipamento) {
+        Equipamento e = new Equipamento();
+
+        try {
+            e.setId(Integer.valueOf(JOptionPane.showInputDialog("Digite um ID: ")));
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "Remocao cancelada");
+            return;
+        }
+
+        for (Equipamento ee : listaEquipamento.getLista()) {
+            if (e.equals(ee)) {
+                try {
+                    listaEquipamento.excluir(ee);
+                    JOptionPane.showMessageDialog(null, "Equipamento removido com sucesso.");
+                    return;
+                } catch (Excecao ex) {
+                    JOptionPane.showMessageDialog(null, "Equipamento nao encontrado.");
+                }
+
+            }
+        }
+        JOptionPane.showMessageDialog(null, "Equipamento nao encontrado.");
+    }
+
+    private static void listar(EquipamentoDAO listaEquipamento) {
+        int contador = 0;
+        for (Equipamento ee : listaEquipamento.getLista()) {
+            JOptionPane.showMessageDialog(null, ee);
+            contador++;
+        }
+        if (contador == 0) {
+            JOptionPane.showMessageDialog(null, "Nenhum Equipamento Cadastrado");
+        }
+    }
+}
